@@ -81,7 +81,6 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
     _dateController.text = DateFormat('dd-MMM-yyyy').format(selectedDate);
     _priceController.text = getFormattedStringPrice(0.0);
     _actualWeightController.text = formatQuantityString(1.00);
-    // Decide which API to call
     if (widget.entryType == EntryType.scan) {
       scanItem();
     } else {
@@ -208,7 +207,7 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
       _actualWeightController.text = formatQuantityString(1.0);
     }
   }
-
+  /// Loads item data by scanning a barcode/QR value.
   void scanItem() async {
     setState(() {
       isLoading = true;
@@ -324,16 +323,6 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
     return priceFormatter.format(price);
   }
 
-  // void _formatPhysicalQty() {
-  //   if (_physicalQtyController.text.isEmpty) {
-  //     _physicalQtyController.text = "0.00";
-  //   } else {
-  //     final value = double.tryParse(_physicalQtyController.text);
-  //     if (value != null) {
-  //       _physicalQtyController.text = getFormattedPriceStringPricetwo(value);
-  //     }
-  //   }
-  // }
   void _formatPhysicalQty() {
     if (_physicalQtyController.text.trim().isEmpty) {
       _physicalQtyController.text = formatQuantityString(1.0);
@@ -479,10 +468,18 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
                                 Image.asset(
                                     width: displayWidth(context) * 0.5,
                                     ImageAssets.errorMessageIcon),
-                                Text(errorText,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  child: Text(
+                                    errorText,
+                                    textAlign: TextAlign.center,
                                     style: getRegularStyle(
-                                        color: ColorManager.lightGrey,
-                                        fontSize: FontSize.s17)),
+                                      color: ColorManager.lightGrey,
+                                      fontSize: FontSize.s17,
+                                    ),
+                                  ),
+                                ),
                                 const Spacer()
                               ],
                             ),
@@ -513,12 +510,6 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       const SizedBox(height: 20),
-                                      // Center(
-                                      //     child: SizedBox(
-                                      //         height: 160,
-                                      //         width: 160,
-                                      //         child: Image.network(
-                                      //             items[0].itemImage))),
                                       Column(
                                         children: [
                                           ConstrainedBox(
@@ -565,7 +556,6 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
                                                   ImageAssets.noImages),
                                         ),
                                       ),
-
                                       Padding(
                                         padding: const EdgeInsets.all(18.0),
                                         child: Column(
@@ -682,29 +672,7 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
                                                               .maxCharactersForQuantity,
                                                         ),
                                                       ],
-                                                      // onTap: () {
-                                                      //   // select all so first keystroke replaces the default
-                                                      //   _physicalQtyController
-                                                      //           .selection =
-                                                      //       TextSelection(
-                                                      //     baseOffset: 0,
-                                                      //     extentOffset:
-                                                      //         _physicalQtyController
-                                                      //             .text.length,
-                                                      //   );
-                                                      // },
-                                                      // onTap: () {
-                                                      //   _physicalQtyController
-                                                      //           .selection =
-                                                      //       TextSelection
-                                                      //           .fromPosition(
-                                                      //     TextPosition(
-                                                      //         offset:
-                                                      //             _physicalQtyController
-                                                      //                 .text
-                                                      //                 .length),
-                                                      //   );
-                                                      // },
+                                                     
                                                       onEditingComplete: () {
                                                         _formatPhysicalQty();
                                                       },
@@ -1038,114 +1006,7 @@ class _BlindStockDetailsViewState extends State<BlindStockDetailsView> {
                                                   ],
                                                 ),
                                               ),
-                                            // if (catchWeight) ...[
-                                            //   const SizedBox(height: 20),
-                                            //   Center(
-                                            //     child: SizedBox(
-                                            //       width: screenWidth - 80,
-                                            //       height: 50,
-                                            //       child: Stack(
-                                            //         children: [
-                                            //           // Actual Weight TextField
-                                            //           TextField(
-                                            //             controller:
-                                            //                 _actualWeightController,
-                                            //             focusNode:
-                                            //                 actualWeightFocusNode,
-                                            //             style: getSemiBoldStyle(
-                                            //               color: ColorManager
-                                            //                   .black,
-                                            //               fontSize:
-                                            //                   FontSize.s17,
-                                            //             ),
-                                            //             keyboardType:
-                                            //                 const TextInputType
-                                            //                     .numberWithOptions(
-                                            //               decimal: true,
-                                            //             ),
-                                            //             inputFormatters: [
-                                            //               DecimalTextInputFormatter(
-                                            //                 decimalPlaces:
-                                            //                     SharedPrefs()
-                                            //                         .decimalplacesquantity,
-                                            //                 minValue: 0.0,
-                                            //                 maxValue:
-                                            //                     double.infinity,
-                                            //               ),
-                                            //             ],
-                                            //             decoration:
-                                            //                 InputDecoration(
-                                            //               contentPadding:
-                                            //                   EdgeInsets.all(
-                                            //                 screenHeight *
-                                            //                     0.015,
-                                            //               ),
-                                            //               labelText:
-                                            //                   actualWeightLabel,
-                                            //               floatingLabelBehavior:
-                                            //                   FloatingLabelBehavior
-                                            //                       .always,
-                                            //               floatingLabelStyle:
-                                            //                   getSemiBoldStyle(
-                                            //                 color: ColorManager
-                                            //                     .lightGrey1,
-                                            //                 fontSize:
-                                            //                     FontSize.s18,
-                                            //               ),
-                                            //               border:
-                                            //                   OutlineInputBorder(
-                                            //                 borderRadius:
-                                            //                     BorderRadius
-                                            //                         .circular(
-                                            //                   screenHeight *
-                                            //                       0.01,
-                                            //                 ),
-                                            //               ),
-                                            //               filled: true,
-                                            //               fillColor:
-                                            //                   Colors.white,
-                                            //             ),
-                                            //           ),
-
-                                            //           // Red triangle indicator (top-right)
-                                            //           Positioned(
-                                            //             right: 0,
-                                            //             top: 0,
-                                            //             child: CustomPaint(
-                                            //               size: const Size(
-                                            //                   12, 12),
-                                            //               painter:
-                                            //                   _RedTrianglePainter(),
-                                            //             ),
-                                            //           ),
-                                            //         ],
-                                            //       ),
-                                            //     ),
-                                            //   ),
-
-                                            //   // NOTE below Actual Weight — left aligned with the field
-                                            //   if (items.isNotEmpty &&
-                                            //       items[0].purchaseUnitID !=
-                                            //           null)
-                                            //     SizedBox(
-                                            //       width: screenWidth - 80,
-                                            //       child: Padding(
-                                            //         padding:
-                                            //             const EdgeInsets.only(
-                                            //                 top: 6),
-                                            //         child: Text(
-                                            //           "1 ${items[0].purchaseUnit} = ${formatQuantityString(items[0].purchaseUnitConversion)} ${items[0].standardUnit}",
-                                            //           style: getSemiBoldStyle(
-                                            //             color: ColorManager
-                                            //                 .lightGrey2,
-                                            //             fontSize: FontSize.s12,
-                                            //           ),
-                                            //           textAlign:
-                                            //               TextAlign.right,
-                                            //         ),
-                                            //       ),
-                                            //     ),
-                                            // ],
+                                           
                                             const SizedBox(height: 20),
                                             SizedBox(
                                               width: (screenWidth) - 45,

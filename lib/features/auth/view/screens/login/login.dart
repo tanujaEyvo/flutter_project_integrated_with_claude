@@ -383,7 +383,7 @@
 //     bool isAuthenticated = await biometricAuth.authenticate();
 
 //     if (isAuthenticated) {
-//       // ✅ SUCCESS - Reset counter on successful biometric authentication
+//       //  SUCCESS - Reset counter on successful biometric authentication
 //       setState(() {
 //         biometricFailCount = 0;
 //         biometricLocked = false;
@@ -402,7 +402,7 @@
 //         });
 //       }
 //     } else {
-//       // ❌ FAILURE - Increment counter on failed biometric attempt
+//       // FAILURE - Increment counter on failed biometric attempt
 //       setState(() {
 //         biometricFailCount++;
 //       });

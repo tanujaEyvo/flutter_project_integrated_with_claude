@@ -945,6 +945,7 @@ class _ReceivedItemListViewState extends State<ReceivedItemListView>
                       ? AnimatedPositioned(
                           duration: duration,
                           curve: Curves.easeInOut,
+                          top: 0,
                           bottom: isEditingQuantity ? 0 : -editBoxHeight,
                           left: 0,
                           right: 0,
@@ -954,120 +955,120 @@ class _ReceivedItemListViewState extends State<ReceivedItemListView>
                             child: AnimatedContainer(
                               color: ColorManager.blackOpacity50,
                               duration: duration,
-                              height: isEditingQuantity
-                                  ? displayHeight(context)
-                                  : 0,
                               child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  const Spacer(),
                                   // Wrap QuantityEditPopup with GestureDetector to absorb taps
-                                  GestureDetector(
-                                    onTap:
-                                        () {}, // Empty onTap to absorb the event
-                                    behavior: HitTestBehavior
-                                        .opaque, // This ensures the tap is captured here
-                                    child: QuantityEditPopup(
-                                      quantityController:
-                                          editQuantityController,
-                                      actualWeightController:
-                                          _actualWeightController,
-                                      commentsController: _commentsController,
-                                      splittable: splittable,
-                                      catchWeight: catchWeight,
-                                      actualWeightLabel: actualWeightLabel,
-                                      isReject: isReject,
-                                      isReceiveGoodsEnabled:
-                                          isReceiveGoodsEnabled,
-                                      onIncrease: increaseReceivedQuantity,
-                                      onDecrease: decreaseReceivedQuantity,
-                                      onToggleAcceptReject: (value) {
-                                        setState(() {
-                                          isReject = !value;
-                                          isReceiveGoodsEnabled = value;
-                                        });
-                                      },
-                                      selectedRejectReason:
-                                          selectedRejectReason,
-                                      selectedAction: selectedAction,
-                                      onRejectReasonChanged: (value) {
-                                        setState(() {
-                                          selectedRejectReason = value;
-                                        });
-                                      },
-                                      onActionChanged: (value) {
-                                        setState(() {
-                                          selectedAction = value;
-                                        });
-                                      },
-                                      unitList: unitList,
-                                      selectedUnitId: selectedUnitId,
-                                      selectedUnit: selectedUnit,
-                                      selectedUnitType: selectedUnitType,
-                                      onUnitChanged: (selected) {
-                                        setState(() {
-                                          selectedUnitId =
-                                              selected['id'] as int?;
-                                          selectedUnit =
-                                              selected['name']?.toString();
-                                          selectedUnitType =
-                                              selected['type']?.toString();
-                                        });
-                                      },
-                                      itemId: orderItems[selectedIndex].itemId,
-                                      // Replacement for PopupTickButton
-                                      noteText: orderItems[selectedIndex]
-                                                  .purchaseUnitID !=
-                                              null
-                                          ? "1 ${orderItems[selectedIndex].purchaseUnit} = "
-                                              "${orderItems[selectedIndex].purchaseUnitConversion?.toStringAsFixed(2)} "
-                                              "${orderItems[selectedIndex].standardUnit}"
-                                          : null,
-                                      onConfirm: () {
-                                        if (editQuantityController.text
-                                            .trim()
-                                            .isEmpty) {
-                                          showErrorDialog(
-                                            context,
-                                            AppStrings.quantityNotValid,
-                                            false,
-                                          );
-                                          return;
-                                        }
-                                        if (catchWeight) {
-                                          final String actualWeightText =
-                                              _actualWeightController.text
-                                                  .trim();
-                                          final double actualWeight =
-                                              double.tryParse(actualWeightText
-                                                      .replaceAll(',', '')) ??
-                                                  0;
-
-                                          if (actualWeightText.isEmpty ||
-                                              actualWeight <= 0) {
+                                  Flexible(
+                                    child: GestureDetector(
+                                      onTap:
+                                          () {}, // Empty onTap to absorb the event
+                                      behavior: HitTestBehavior
+                                          .opaque, // This ensures the tap is captured here
+                                      child: QuantityEditPopup(
+                                        quantityController:
+                                            editQuantityController,
+                                        actualWeightController:
+                                            _actualWeightController,
+                                        commentsController: _commentsController,
+                                        splittable: splittable,
+                                        catchWeight: catchWeight,
+                                        actualWeightLabel: actualWeightLabel,
+                                        isReject: isReject,
+                                        isReceiveGoodsEnabled:
+                                            isReceiveGoodsEnabled,
+                                        onIncrease: increaseReceivedQuantity,
+                                        onDecrease: decreaseReceivedQuantity,
+                                        onToggleAcceptReject: (value) {
+                                          setState(() {
+                                            isReject = !value;
+                                            isReceiveGoodsEnabled = value;
+                                          });
+                                        },
+                                        selectedRejectReason:
+                                            selectedRejectReason,
+                                        selectedAction: selectedAction,
+                                        onRejectReasonChanged: (value) {
+                                          setState(() {
+                                            selectedRejectReason = value;
+                                          });
+                                        },
+                                        onActionChanged: (value) {
+                                          setState(() {
+                                            selectedAction = value;
+                                          });
+                                        },
+                                        unitList: unitList,
+                                        selectedUnitId: selectedUnitId,
+                                        selectedUnit: selectedUnit,
+                                        selectedUnitType: selectedUnitType,
+                                        onUnitChanged: (selected) {
+                                          setState(() {
+                                            selectedUnitId =
+                                                selected['id'] as int?;
+                                            selectedUnit =
+                                                selected['name']?.toString();
+                                            selectedUnitType =
+                                                selected['type']?.toString();
+                                          });
+                                        },
+                                        itemId:
+                                            orderItems[selectedIndex].itemId,
+                                        // Replacement for PopupTickButton
+                                        noteText: orderItems[selectedIndex]
+                                                    .purchaseUnitID !=
+                                                null
+                                            ? "1 ${orderItems[selectedIndex].purchaseUnit} = "
+                                                "${orderItems[selectedIndex].purchaseUnitConversion?.toStringAsFixed(2)} "
+                                                "${orderItems[selectedIndex].standardUnit}"
+                                            : null,
+                                        onConfirm: () {
+                                          if (editQuantityController.text
+                                              .trim()
+                                              .isEmpty) {
                                             showErrorDialog(
                                               context,
-                                              actualWeightLabel.isNotEmpty
-                                                  ? "$actualWeightLabel should be greater than 0."
-                                                  : "Actual Weight should be greater than 0.",
+                                              AppStrings.quantityNotValid,
                                               false,
                                             );
                                             return;
                                           }
-                                        }
-                                        // if (catchWeight &&
-                                        //     _actualWeightController.text
-                                        //         .trim()
-                                        //         .isEmpty) {
-                                        //   showErrorDialog(
-                                        //     context,
-                                        //     'Actual weight cannot be empty.',
-                                        //     false,
-                                        //   );
-                                        //   return;
-                                        // }
+                                          if (catchWeight) {
+                                            final String actualWeightText =
+                                                _actualWeightController.text
+                                                    .trim();
+                                            final double actualWeight =
+                                                double.tryParse(actualWeightText
+                                                        .replaceAll(',', '')) ??
+                                                    0;
 
-                                        updateReceivedQuantity();
-                                      },
+                                            if (actualWeightText.isEmpty ||
+                                                actualWeight <= 0) {
+                                              showErrorDialog(
+                                                context,
+                                                actualWeightLabel.isNotEmpty
+                                                    ? "$actualWeightLabel should be greater than 0."
+                                                    : "Actual Weight should be greater than 0.",
+                                                false,
+                                              );
+                                              return;
+                                            }
+                                          }
+                                          // if (catchWeight &&
+                                          //     _actualWeightController.text
+                                          //         .trim()
+                                          //         .isEmpty) {
+                                          //   showErrorDialog(
+                                          //     context,
+                                          //     'Actual weight cannot be empty.',
+                                          //     false,
+                                          //   );
+                                          //   return;
+                                          // }
+
+                                          updateReceivedQuantity();
+                                        },
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1410,13 +1411,12 @@ class _QuantityEditPopupState extends State<QuantityEditPopup> {
       onTap: () => FocusScope.of(context).unfocus(),
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        //  padding: EdgeInsets.only(bottom: keyboardHeight),
         padding: EdgeInsets.only(bottom: keyboardHeight > 0 ? 8 : 0),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeInOut,
           padding: EdgeInsets.all(screenHeight * 0.02),
-          height: _calculatedHeight,
+          constraints: BoxConstraints(maxHeight: _calculatedHeight),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(screenHeight * 0.02),
@@ -1431,7 +1431,7 @@ class _QuantityEditPopupState extends State<QuantityEditPopup> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // ---------- Toggle Accept / Reject (unchanged) ----------
+              // ---------- Toggle Accept / Reject (always visible) ----------
               Row(
                 children: [
                   SizedBox(width: screenWidth * 0.01),
@@ -1531,13 +1531,14 @@ class _QuantityEditPopupState extends State<QuantityEditPopup> {
               ),
               SizedBox(height: screenHeight * 0.01),
               const Divider(thickness: 1),
-              SizedBox(height: screenHeight * 0.01),
-              Expanded(
+              // ---------- Scrollable content ----------
+              Flexible(
                 child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      SizedBox(height: screenHeight * 0.01),
                       Text(
                         widget.isReject
                             ? (widget.catchWeight &&

@@ -319,7 +319,9 @@ class _OfflineBlindStockListViewState extends State<OfflineBlindStockListView>
       bool found = false;
 
       for (final code in candidates) {
-        final int? itemId = await _offlineDBDao.getItemIdByBarCodeString(code);
+        //   final int? itemId = await _offlineDBDao.getItemIdByBarCodeString(code);
+        final int? itemId = await _offlineDBDao
+            .getItemIdByBarCodeWithoutRegionAndLocationString(code);
 
         LoggerData.dataLog("Trying barcode : $code -> ItemId : $itemId");
 
@@ -336,6 +338,8 @@ class _OfflineBlindStockListViewState extends State<OfflineBlindStockListView>
           "Item Details Not Found",
         );
         LoggerData.dataLog(resultString);
+        LoggerData.dataLog(
+            "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@Item Details Not Found");
       }
     } catch (e, stackTrace) {
       await _offlineDBDao.insertErrorLog(
@@ -467,7 +471,7 @@ class _OfflineBlindStockListViewState extends State<OfflineBlindStockListView>
         throw Exception("QR missing itemid. JSON: ${jsonEncode(jsonData)}");
       }
 
-      // ✅ Always use the user's current session region/location.
+      // Always use the user's current session region/location.
       // The QR's region_id/location_id are placeholders (0/1) and
       // must NOT override the session.
       final int sessionRegionId = SharedPrefs().selectedRegionID;
@@ -506,7 +510,7 @@ class _OfflineBlindStockListViewState extends State<OfflineBlindStockListView>
         return;
       }
 
-      // ❌ DO NOT call:
+      //  DO NOT call:
       // SharedPrefs().selectedLocationID = locationId;
       // SharedPrefs().selectedRegionID = regionId;
 

@@ -1138,6 +1138,43 @@ LIMIT 1
     }
   }
 
+  Future<int?> getItemIdByBarCodeWithoutRegionAndLocationString(
+      String upc) async {
+    try {
+      final db = await _dbHelper.db;
+
+      // Fetch ALL rows matching the UPC (no limit — UPC may not be unique)
+      final result = await db.query(
+        'item_stock',
+        columns: ['ItemID'],
+        where: 'UPC = ?',
+        whereArgs: [upc],
+      );
+
+      if (result.isEmpty) {
+        LoggerData.dataLog('No item found for UPC: $upc');
+        return null;
+      }
+
+      LoggerData.dataLog(
+        'UPC $upc matched ${result.length} row(s): '
+        '${result.map((r) => r['ItemID']).toList()}',
+      );
+
+      // Just return the first matching ItemID — no region/location check here.
+      // Region/location validation is handled separately by the caller
+      // (e.g. via checkItemInRegion).
+      final int itemId = result.first['ItemID'] as int;
+
+      LoggerData.dataLog('Item found for UPC: $upc, ItemID: $itemId');
+      return itemId;
+    } catch (e, stackTrace) {
+      LoggerData.dataLog('Error finding item by UPC: $e');
+      LoggerData.dataLog(stackTrace.toString());
+      return null;
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getUnsyncedErrorLogs() async {
     final db = await _dbHelper.db;
 
@@ -1266,5 +1303,60 @@ LIMIT 1
 
     LoggerData.dataLog("First region from DB: $result");
     return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<int> checkItemInRegion({required int itemId}) async {
+    try {
+      final db = await _dbHelper.db;
+
+      final regionId = SharedPrefs().selectedRegionID;
+
+      final count = Sqflite.firstIntValue(
+            await db.rawQuery(
+              'SELECT COUNT(*) FROM items_region WHERE ItemID = ? AND Region_ID = ?',
+              [itemId, regionId],
+            ),
+          ) ??
+          0;
+
+      LoggerData.dataLog(
+        'checkItemInRegion -> itemId=$itemId, regionId=$regionId, count=$count',
+      );
+
+      return count;
+    } catch (e, stackTrace) {
+      LoggerData.dataLog('checkItemInRegion error: $e');
+      LoggerData.dataLog(stackTrace.toString());
+      return 0;
+    }
+  }
+
+  /// Get ItemCode for a given ItemID from item_stock.
+  /// Ignores region/location — used for building region-mismatch messages.
+  Future<String?> getItemCodeById(int itemId) async {
+    try {
+      final db = await _dbHelper.db;
+
+      final result = await db.query(
+        'item_stock',
+        columns: ['ItemCode'],
+        where: 'ItemID = ?',
+        whereArgs: [itemId],
+        limit: 1,
+      );
+
+      if (result.isEmpty) {
+        LoggerData.dataLog('getItemCodeById -> no match for ItemID: $itemId');
+        return null;
+      }
+
+      final code = result.first['ItemCode']?.toString();
+      LoggerData.dataLog('getItemCodeById -> ItemID=$itemId, ItemCode=$code');
+      return code;
+    } catch (e, stackTrace) {
+      LoggerData.dataLog('getItemCodeById error: $e');
+      LoggerData.dataLog(stackTrace.toString());
+      return null;
+    }
   }
 }

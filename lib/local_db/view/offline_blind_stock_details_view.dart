@@ -180,121 +180,70 @@ class _OfflineBlindStockDetailsViewState
     LoggerData.dataLog('Selected Unit Type: $selectedUnitType');
   }
 
-  // Future<void> fetchItemDetails() async {
-  //   setState(() => isLoading = true);
-
-  //   try {
-  //     final regionId =
-  //         // SharedPrefs().isItemScanned
-  //         //     ? SharedPrefs().scannedRegionID
-  //         //     :
-  //         SharedPrefs().selectedRegionID;
-
-  //     final locationId =
-  //         // SharedPrefs().isItemScanned
-  //         //     ? SharedPrefs().scannedLocationID
-  //         //     :
-  //         SharedPrefs().selectedLocationID;
-
-  //     final result = await _offlineDBDao.getItemDetailsById(
-  //       itemId: widget.itemId,
-  //       regionId: regionId,
-  //       locationId: locationId,
-  //     );
-
-  //     if (result != null) {
-  //       setState(() {
-  //         item = result;
-  //         itemType = result.itemType;
-
-  //         // Read flags from model
-  //         catchWeight = result.catchWeight ?? false;
-  //         splittable = result.splittable ?? false;
-  //         actualWeightLabel = result.actualWeightLabel ?? '';
-
-  //         // Build unit list based on splittable + purchase/inventory units
-  //         _setUnitList(result);
-
-  //         final double savedQty =
-  //             (result.newStockCount == null || result.newStockCount == 0.0)
-  //                 ? 1.0
-  //                 : result.newStockCount!;
-
-  //         // ✅ FIX: Handle catchWeight vs non-catchWeight properly
-  //         if (catchWeight) {
-  //           // For catch weight items, savedQty represents Actual Weight
-  //           _actualWeightController.text = formatQuantityString(savedQty);
-  //           _physicalQtyController.text = formatQuantityString(1.0);
-  //         } else {
-  //           // For normal items, savedQty represents Physical Quantity
-  //           _physicalQtyController.text = formatQuantityString(savedQty);
-  //           _actualWeightController.text = formatQuantityString(1.0);
-  //         }
-  //       });
-  //     } else {
-  //       await _offlineDBDao.insertErrorLog(
-  //         exceptionMessage: 'OFFLINE - Item not found in offline database',
-  //         stackTrace: '',
-  //         apiUrl: 'SQLite - getItemDetailsById',
-  //         requestBody: jsonEncode({
-  //           'itemId': widget.itemId,
-  //           'regionId': regionId,
-  //           'locationId': locationId,
-  //         }),
-  //         screenName: 'OfflineBlindStockDetailsView',
-  //         methodName: 'fetchItemDetails',
-  //       );
-
-  //       setState(() {
-  //         isError = true;
-  //         errorText = "Item not found in offline data";
-  //       });
-  //     }
-  //   } catch (e, stackTrace) {
-  //     await _offlineDBDao.insertErrorLog(
-  //       exceptionMessage: e.toString(),
-  //       stackTrace: stackTrace.toString(),
-  //       apiUrl: 'OFFLINE - SQLite - getItemDetailsById',
-  //       requestBody: jsonEncode({
-  //         'itemId': widget.itemId,
-  //         'regionId': SharedPrefs().isItemScanned
-  //             ? SharedPrefs().scannedRegionID
-  //             : SharedPrefs().selectedRegionID,
-  //         'locationId': SharedPrefs().isItemScanned
-  //             ? SharedPrefs().scannedLocationID
-  //             : SharedPrefs().selectedLocationID,
-  //       }),
-  //       screenName: 'OfflineBlindStockDetailsView',
-  //       methodName: 'fetchItemDetails',
-  //     );
-
-  //     LoggerData.dataLog('fetchItemDetails Exception: $e');
-  //     LoggerData.dataLog(stackTrace.toString());
-
-  //     setState(() {
-  //       isError = true;
-  //       errorText = AppStrings.somethingWentWrong;
-  //     });
-  //   } finally {
-  //     setState(() => isLoading = false);
-  //   }
-  // }
   Future<void> fetchItemDetails() async {
     setState(() => isLoading = true);
 
     try {
-      final regionId =
-          // SharedPrefs().isItemScanned
-          //     ? SharedPrefs().scannedRegionID
-          //     :
-          SharedPrefs().selectedRegionID;
+      final regionId = SharedPrefs().selectedRegionID;
+      final locationId = SharedPrefs().selectedLocationID;
 
-      final locationId =
-          // SharedPrefs().isItemScanned
-          //     ? SharedPrefs().scannedLocationID
-          //     :
-          SharedPrefs().selectedLocationID;
+      //  Check if item belongs to the selected region (items_region)
+      final int regionCount =
+          await _offlineDBDao.checkItemInRegion(itemId: widget.itemId);
 
+      LoggerData.dataLog(
+        'fetchItemDetails -> checkItemInRegion(itemId=${widget.itemId}) '
+        'count=$regionCount',
+      );
+
+      if (regionCount == 0) {
+        //  Item exists in item_stock but NOT in current region
+        // await _offlineDBDao.insertErrorLog(
+        //   exceptionMessage:
+        //       'Item does not belong to selected region. '
+        //       'itemId=${widget.itemId}, regionId=$regionId',
+        //   stackTrace: '',
+        //   apiUrl: 'SQLite - checkItemInRegion',
+        //   requestBody: jsonEncode({
+        //     'itemId': widget.itemId,
+        //     'regionId': regionId,
+        //   }),
+        //   screenName: 'OfflineBlindStockDetailsView',
+        //   methodName: 'fetchItemDetails',
+        // );
+
+        // setState(() {
+        //   isError = true;
+        //   errorText = "hi";
+        // });
+        // Fetch itemCode for the mismatch message
+        String? itemCode;
+        try {
+          itemCode = await _offlineDBDao.getItemCodeById(widget.itemId);
+        } catch (e, stackTrace) {
+          LoggerData.dataLog('getItemCodeById exception: $e');
+          LoggerData.dataLog(stackTrace.toString());
+        }
+
+        final String safeItemCode = itemCode ?? '';
+        final String regionLabel = SharedPrefs().offlineRegionLableName;
+        // final String selectedRegion = SharedPrefs().selectedRegion;
+        final String selectedRegion =
+            SharedPrefs().selectedRegion.split(' - ').first;
+
+        final String mismatchMessage =
+            'Item Code ($safeItemCode) does not belogs to selected Location $selectedRegion';
+
+        LoggerData.dataLog('Region mismatch message: $mismatchMessage');
+
+        setState(() {
+          isError = true;
+          errorText = mismatchMessage;
+        });
+        return;
+      }
+
+      //  Item belongs to region -> fetch full details
       final result = await _offlineDBDao.getItemDetailsById(
         itemId: widget.itemId,
         regionId: regionId,
@@ -302,7 +251,7 @@ class _OfflineBlindStockDetailsViewState
       );
 
       if (result != null) {
-        // ✅ Fetch concatenated Region - Location string
+        // Fetch concatenated Region - Location string
         String? concatValue;
         try {
           concatValue = await _offlineDBDao.getLocationRegionConcatById(
@@ -389,6 +338,119 @@ class _OfflineBlindStockDetailsViewState
       setState(() => isLoading = false);
     }
   }
+
+  // Future<void> fetchItemDetails() async {
+  //   setState(() => isLoading = true);
+
+  //   try {
+  //     final regionId =
+  //         // SharedPrefs().isItemScanned
+  //         //     ? SharedPrefs().scannedRegionID
+  //         //     :
+  //         SharedPrefs().selectedRegionID;
+
+  //     final locationId =
+  //         // SharedPrefs().isItemScanned
+  //         //     ? SharedPrefs().scannedLocationID
+  //         //     :
+  //         SharedPrefs().selectedLocationID;
+
+  //     final result = await _offlineDBDao.getItemDetailsById(
+  //       itemId: widget.itemId,
+  //       regionId: regionId,
+  //       locationId: locationId,
+  //     );
+
+  //     if (result != null) {
+  //       //check if item exist in items_region table with selected region in dash
+
+  //       // Fetch concatenated Region - Location string
+  //       String? concatValue;
+  //       try {
+  //         concatValue = await _offlineDBDao.getLocationRegionConcatById(
+  //           itemId: widget.itemId,
+  //           regionId: regionId,
+  //           locationId: locationId,
+  //         );
+  //       } catch (e, stackTrace) {
+  //         LoggerData.dataLog('getLocationRegionConcatById Exception: $e');
+  //         LoggerData.dataLog(stackTrace.toString());
+  //       }
+
+  //       setState(() {
+  //         item = result;
+  //         itemType = result.itemType;
+  //         concataLocationRegion = concatValue;
+
+  //         // Read flags from model
+  //         catchWeight = result.catchWeight ?? false;
+  //         splittable = result.splittable ?? false;
+  //         actualWeightLabel = result.actualWeightLabel ?? '';
+
+  //         // Build unit list based on splittable + purchase/inventory units
+  //         _setUnitList(result);
+
+  //         final double savedQty =
+  //             (result.newStockCount == null || result.newStockCount == 0.0)
+  //                 ? 1.0
+  //                 : result.newStockCount!;
+
+  //         if (catchWeight) {
+  //           _actualWeightController.text = formatQuantityString(savedQty);
+  //           _physicalQtyController.text = formatQuantityString(1.0);
+  //         } else {
+  //           _physicalQtyController.text = formatQuantityString(savedQty);
+  //           _actualWeightController.text = formatQuantityString(1.0);
+  //         }
+  //       });
+  //     } else {
+  //       await _offlineDBDao.insertErrorLog(
+  //         exceptionMessage: 'OFFLINE - Item not found in offline database',
+  //         stackTrace: '',
+  //         apiUrl: 'SQLite - getItemDetailsById',
+  //         requestBody: jsonEncode({
+  //           'itemId': widget.itemId,
+  //           'regionId': regionId,
+  //           'locationId': locationId,
+  //         }),
+  //         screenName: 'OfflineBlindStockDetailsView',
+  //         methodName: 'fetchItemDetails',
+  //       );
+
+  //       setState(() {
+  //         isError = true;
+  //         errorText = "Item not found in offline data";
+  //       });
+  //     }
+  //   } catch (e, stackTrace) {
+  //     await _offlineDBDao.insertErrorLog(
+  //       exceptionMessage: e.toString(),
+  //       stackTrace: stackTrace.toString(),
+  //       apiUrl: 'OFFLINE - SQLite - getItemDetailsById',
+  //       requestBody: jsonEncode({
+  //         'itemId': widget.itemId,
+  //         'regionId': SharedPrefs().isItemScanned
+  //             ? SharedPrefs().scannedRegionID
+  //             : SharedPrefs().selectedRegionID,
+  //         'locationId': SharedPrefs().isItemScanned
+  //             ? SharedPrefs().scannedLocationID
+  //             : SharedPrefs().selectedLocationID,
+  //       }),
+  //       screenName: 'OfflineBlindStockDetailsView',
+  //       methodName: 'fetchItemDetails',
+  //     );
+
+  //     LoggerData.dataLog('fetchItemDetails Exception: $e');
+  //     LoggerData.dataLog(stackTrace.toString());
+
+  //     setState(() {
+  //       isError = true;
+  //       errorText = AppStrings.somethingWentWrong;
+  //     });
+  //   } finally {
+  //     setState(() => isLoading = false);
+  //   }
+  // }
 
   void _formatPhysicalQty() {
     if (_physicalQtyController.text.trim().isEmpty) {
@@ -558,11 +620,15 @@ class _OfflineBlindStockDetailsViewState
                             ImageAssets.noRecordFoundIcon,
                             width: displayWidth(context) * 0.5,
                           ),
-                          Text(
-                            errorText,
-                            style: getRegularStyle(
-                              color: ColorManager.lightGrey,
-                              fontSize: FontSize.s17,
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              errorText,
+                              textAlign: TextAlign.center,
+                              style: getRegularStyle(
+                                color: ColorManager.lightGrey,
+                                fontSize: FontSize.s17,
+                              ),
                             ),
                           ),
                         ],
